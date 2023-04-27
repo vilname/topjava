@@ -6,8 +6,7 @@ import ru.javawebinar.topjava.model.UserMealWithExcess;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class UserMealsUtil {
     public static void main(String[] args) {
@@ -29,11 +28,48 @@ public class UserMealsUtil {
 
     public static List<UserMealWithExcess> filteredByCycles(List<UserMeal> meals, LocalTime startTime, LocalTime endTime, int caloriesPerDay) {
         // TODO return filtered list with excess. Implement by cycles
-        return null;
+        List<UserMealWithExcess> filterMeal = new ArrayList<>();
+
+        int startHour = startTime.getHour();
+        int endHour = endTime.getHour();
+
+        List<UserMeal>userMealsByTime = meals.stream().filter((UserMeal userMeal) -> {
+            LocalDateTime localDateTime = userMeal.getDateTime();
+            int mealHour = localDateTime.getHour();
+
+            return startHour < mealHour && endHour > mealHour;
+        }).toList();
+
+        HashMap<Integer, Integer> amountCaloriesPerDays = calculateCaloriesPerDay(userMealsByTime);
+
+        for (UserMeal meal : userMealsByTime) {
+            int dayOfYear = meal.getDateTime().getDayOfYear();
+
+            filterMeal.add(new UserMealWithExcess(
+                    meal.getDateTime(),
+                    meal.getDescription(),
+                    meal.getCalories(),
+                    amountCaloriesPerDays.get(dayOfYear) < caloriesPerDay
+            ));
+        }
+
+        return filterMeal;
     }
 
     public static List<UserMealWithExcess> filteredByStreams(List<UserMeal> meals, LocalTime startTime, LocalTime endTime, int caloriesPerDay) {
-        // TODO Implement by streams
         return null;
+    }
+
+    private static HashMap<Integer, Integer> calculateCaloriesPerDay(List<UserMeal> meals)
+    {
+        HashMap<Integer, Integer> caloriesPerDay = new HashMap<>();
+
+        for (UserMeal meal : meals) {
+            int dayOfYear = meal.getDateTime().getDayOfYear();
+
+            caloriesPerDay.put(dayOfYear, caloriesPerDay.getOrDefault(dayOfYear, 0) + meal.getCalories());
+        }
+
+        return caloriesPerDay;
     }
 }
