@@ -27,30 +27,28 @@ public class UserMealsUtil {
     }
 
     public static List<UserMealWithExcess> filteredByCycles(List<UserMeal> meals, LocalTime startTime, LocalTime endTime, int caloriesPerDay) {
-        // TODO return filtered list with excess. Implement by cycles
         List<UserMealWithExcess> filterMeal = new ArrayList<>();
 
         int startHour = startTime.getHour();
         int endHour = endTime.getHour();
 
-        List<UserMeal>userMealsByTime = meals.stream().filter((UserMeal userMeal) -> {
-            LocalDateTime localDateTime = userMeal.getDateTime();
+        HashMap<Integer, Integer> caloriesPerDayStore = new HashMap<>();
+
+        for (UserMeal meal : meals) {
+            int dayOfYear = meal.getDateTime().getDayOfYear();
+            caloriesPerDayStore.put(dayOfYear, caloriesPerDayStore.getOrDefault(dayOfYear, 0) + meal.getCalories());
+
+            LocalDateTime localDateTime = meal.getDateTime();
             int mealHour = localDateTime.getHour();
 
-            return startHour < mealHour && endHour > mealHour;
-        }).toList();
-
-        HashMap<Integer, Integer> amountCaloriesPerDays = calculateCaloriesPerDay(userMealsByTime);
-
-        for (UserMeal meal : userMealsByTime) {
-            int dayOfYear = meal.getDateTime().getDayOfYear();
-
-            filterMeal.add(new UserMealWithExcess(
-                    meal.getDateTime(),
-                    meal.getDescription(),
-                    meal.getCalories(),
-                    amountCaloriesPerDays.get(dayOfYear) < caloriesPerDay
-            ));
+            if (startHour < mealHour && endHour > mealHour) {
+                filterMeal.add(new UserMealWithExcess(
+                        meal.getDateTime(),
+                        meal.getDescription(),
+                        meal.getCalories(),
+                        caloriesPerDayStore.get(dayOfYear) < caloriesPerDay
+                ));
+            }
         }
 
         return filterMeal;
@@ -58,18 +56,5 @@ public class UserMealsUtil {
 
     public static List<UserMealWithExcess> filteredByStreams(List<UserMeal> meals, LocalTime startTime, LocalTime endTime, int caloriesPerDay) {
         return null;
-    }
-
-    private static HashMap<Integer, Integer> calculateCaloriesPerDay(List<UserMeal> meals)
-    {
-        HashMap<Integer, Integer> caloriesPerDay = new HashMap<>();
-
-        for (UserMeal meal : meals) {
-            int dayOfYear = meal.getDateTime().getDayOfYear();
-
-            caloriesPerDay.put(dayOfYear, caloriesPerDay.getOrDefault(dayOfYear, 0) + meal.getCalories());
-        }
-
-        return caloriesPerDay;
     }
 }
